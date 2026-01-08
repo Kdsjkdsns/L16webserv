@@ -56,7 +56,7 @@ app.post('/addCar/', async (req, res) => {
 });
 
 app.post('/updateCar', async (req, res) => {
-    const { car_id, car_name, car_pic } = req.body;
+    const { id, car_name, car_pic } = req.body;
 
     try {
         let connection = await mysql.createConnection(dbConfig);
@@ -72,7 +72,7 @@ app.post('/updateCar', async (req, res) => {
 });
 
 app.post('/deleteCar', async (req, res) => {
-    const { car_id } = req.body;
+    const { id } = req.body;
 
     try {
         let connection = await mysql.createConnection(dbConfig);
