@@ -26,8 +26,7 @@ ReqBin: https://l16webserv.onrender.com/addCar POST
 
 ReqBin: https://l16webserv.onrender.com/deleteCar POST
 {
-"car_name": "Bugatti Bolide",
-"car_pic": "https://tse4.mm.bing.net/th/id/OIP.OS_2Pl4Ny3T2e5ynpf2TcQHaEK?pid=Api&P=0&h=180"
+"id": 1
 }
 
 
