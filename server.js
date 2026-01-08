@@ -40,7 +40,9 @@ app.get('/allcars', async (requestAnimationFrame, res) => {
 });
 
 //Example Route: Create a new card
-app.post('/addCar/', async (req, res) => {const {card_name, card_pic} = req.body;
+app.post('/addCar/', async (req, res) => {
+    const {car_name, car_pic} = req.body;
+
     try {
         let connection = await mysql.createConnection(dbConfig);
         await connection.execute(
@@ -54,6 +56,8 @@ app.post('/addCar/', async (req, res) => {const {card_name, card_pic} = req.body
 });
 
 app.post('/updateCar', async (req, res) => {
+    const { car_id, car_name, car_pic } = req.body;
+
     try {
         let connection = await mysql.createConnection(dbConfig);
         await connection.execute(
@@ -68,6 +72,8 @@ app.post('/updateCar', async (req, res) => {
 });
 
 app.post('/deleteCar', async (req, res) => {
+    const { car_id } = req.body;
+
     try {
         let connection = await mysql.createConnection(dbConfig);
         await connection.execute('DELETE FROM cars WHERE id = ?', [id]);
