@@ -30,7 +30,8 @@ app.listen(port, () => {
 app.get('/allcars', async (requestAnimationFrame, res) => {
     try {
         let connection = await mysql.createConnection(dbConfig);
-        const [rows] = await connection.execute('SELECT * FROM defaultdb.cars'); //no need to specify default schema
+        const [rows] = await connection.execute(
+            'SELECT * FROM defaultdb.cars'); //no need to specify default schema
         res.json(rows);
     } catch (err) {
         console.error(err);
@@ -42,10 +43,37 @@ app.get('/allcars', async (requestAnimationFrame, res) => {
 app.post('/addCar/', async (req, res) => {const {card_name, card_pic} = req.body;
     try {
         let connection = await mysql.createConnection(dbConfig);
-        await connection.execute('INSERT INTO cars (car_name, car_pic) VALUES (?, ?)', [car_name, car_pic]);
+        await connection.execute(
+            'INSERT INTO cars (car_name, car_pic) VALUES (?, ?)',
+            [car_name, car_pic]);
         res.status(201).json({message: 'Car ' + car_name + ' added successfully'});
     } catch (err) {
         console.error(err);
         res.status(500).json({message: 'Server error - could not add car ' + car_name});
+    }
+});
+
+app.post('/updateCar', async (req, res) => {
+    try {
+        let connection = await mysql.createConnection(dbConfig);
+        await connection.execute(
+            'UPDATE cars SET car_name = ?, car_pic = ? WHERE id = ?',
+            [car_name, car_pic, id]
+        );
+        res.json({ message: `Car ID ${id} updated successfully` });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: `Server error - could not update car with id: ${id}` });
+    }
+});
+
+app.post('/deleteCar', async (req, res) => {
+    try {
+        let connection = await mysql.createConnection(dbConfig);
+        await connection.execute('DELETE FROM cars WHERE id = ?', [id]);
+        res.json({ message: `Car ID ${id} deleted successfully` });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: `Server error - could not delete car ${id}` });
     }
 });
