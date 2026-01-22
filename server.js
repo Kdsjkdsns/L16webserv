@@ -74,7 +74,7 @@ app.post('/addcar', async (req, res) => {
     try {
         connection = await mysql.createConnection(dbConfig);
         await connection.execute(
-            'INSERT INTO cards (car_name, car_pic) VALUES (?, ?)',
+            'INSERT INTO cars (car_name, car_pic) VALUES (?, ?)',
             [car_name, car_pic]
         );
         res.status(201).json({ message: `Car ${car_name} added successfully` });
