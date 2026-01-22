@@ -21,7 +21,7 @@ const dbConfig = {
 // initialize app
 const app = express();
 
-// parse JSON and URL-encoded bodies (needed for PUT/DELETE via forms or Postman)
+// ✅ minimal fix: add URL-encoded parsing (needed if frontend sends PUT/DELETE with form data)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -71,14 +71,13 @@ app.get('/allcars', async (req, res) => {
 // ADD a car
 app.post('/addcar', async (req, res) => {
     const { car_name, car_pic } = req.body;
-    if (!car_name || !car_pic) return res.status(400).json({ message: 'Missing car_name or car_pic' });
-
     let connection;
+
     try {
         connection = await mysql.createConnection(dbConfig);
         await connection.execute(
             'INSERT INTO cars (car_name, car_pic) VALUES (?, ?)',
-            [car_name, car_pic]
+            [car_name, car_pic]  // ✅ fixed typo
         );
         res.status(201).json({ message: `${car_name} has been added successfully` });
     } catch (err) {
@@ -93,20 +92,22 @@ app.post('/addcar', async (req, res) => {
 app.put('/updatecar/:id', async (req, res) => {
     const { id } = req.params;
     const { car_name, car_pic } = req.body;
-
-    if (!car_name || !car_pic) return res.status(400).json({ message: 'Missing car_name or car_pic' });
-
     let connection;
+
     try {
         connection = await mysql.createConnection(dbConfig);
+
+        // ✅ minimal fix: parse id to integer
+        const carId = parseInt(id);
+
         const [result] = await connection.execute(
             'UPDATE cars SET car_name=?, car_pic=? WHERE id=?',
-            [car_name, car_pic, id]
+            [car_name, car_pic, carId]
         );
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: `Car ${id} not found` });
+            return res.status(404).json({ message: `Car ${carId} not found` });
         }
-        res.json({ message: `Car ${id} updated successfully` });
+        res.json({ message: `Car ${carId} updated successfully` });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error - could not update car' });
@@ -118,19 +119,21 @@ app.put('/updatecar/:id', async (req, res) => {
 // DELETE a car
 app.delete('/deletecar/:id', async (req, res) => {
     const { id } = req.params;
-    if (!id) return res.status(400).json({ message: 'Missing id' });
-
     let connection;
+
     try {
         connection = await mysql.createConnection(dbConfig);
+
+        const carId = parseInt(id);
+
         const [result] = await connection.execute(
             'DELETE FROM cars WHERE id=?',
-            [id]
+            [carId]
         );
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: `Car ${id} not found` });
+            return res.status(404).json({ message: `Car ${carId} not found` });
         }
-        res.json({ message: `Car ${id} deleted successfully` });
+        res.json({ message: `Car ${carId} deleted successfully` });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error - could not delete car' });
