@@ -3,9 +3,9 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 require('dotenv').config();
- 
+
 const port = 3000;
- 
+
 // database config
 const dbConfig = {
     host: process.env.DB_HOST,
@@ -17,17 +17,17 @@ const dbConfig = {
     connectionLimit: 100,
     queueLimit: 0,
 };
- 
+
 // initialize app
 const app = express();
 app.use(express.json());
- 
+
 // CORS config
 const allowedOrigins = [
     "http://localhost:3000",
     "https://onlinecardapp.onrender.com"
 ];
- 
+
 app.use(
     cors({
         origin: function (origin, callback) {
@@ -42,16 +42,16 @@ app.use(
         credentials: false,
     })
 );
- 
+
 // start server
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
- 
- 
+
+
 // ================= ROUTES =================
- 
-// GET all cards
+
+// GET all cars
 app.get('/allcars', async (req, res) => {
     let connection;
     try {
@@ -65,17 +65,17 @@ app.get('/allcars', async (req, res) => {
         if (connection) await connection.end();
     }
 });
- 
-// ADD a card
+
+// ADD a car
 app.post('/addcar', async (req, res) => {
     const { car_name, car_pic } = req.body;
     let connection;
- 
+
     try {
         connection = await mysql.createConnection(dbConfig);
         await connection.execute(
             'INSERT INTO cars (car_name, car_pic) VALUES (?, ?)',
-            [card_name, card_pic]
+            [car_name, car_pic]  // ✅ fixed typo
         );
         res.status(201).json({ message: `${car_name} has been added successfully` });
     } catch (err) {
@@ -85,19 +85,22 @@ app.post('/addcar', async (req, res) => {
         if (connection) await connection.end();
     }
 });
- 
-// UPDATE a card
+
+// UPDATE a car
 app.put('/updatecar/:id', async (req, res) => {
     const { id } = req.params;
     const { car_name, car_pic } = req.body;
     let connection;
- 
+
     try {
         connection = await mysql.createConnection(dbConfig);
-        await connection.execute(
+        const [result] = await connection.execute(
             'UPDATE cars SET car_name=?, car_pic=? WHERE id=?',
             [car_name, car_pic, id]
         );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: `Car ${id} not found` });
+        }
         res.json({ message: `Car ${id} updated successfully` });
     } catch (err) {
         console.error(err);
@@ -106,18 +109,21 @@ app.put('/updatecar/:id', async (req, res) => {
         if (connection) await connection.end();
     }
 });
- 
-// DELETE a card
+
+// DELETE a car
 app.delete('/deletecar/:id', async (req, res) => {
     const { id } = req.params;
     let connection;
- 
+
     try {
         connection = await mysql.createConnection(dbConfig);
-        await connection.execute(
+        const [result] = await connection.execute(
             'DELETE FROM cars WHERE id=?',
             [id]
         );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: `Car ${id} not found` });
+        }
         res.json({ message: `Car ${id} deleted successfully` });
     } catch (err) {
         console.error(err);
