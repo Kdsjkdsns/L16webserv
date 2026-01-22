@@ -20,7 +20,10 @@ const dbConfig = {
 
 // initialize app
 const app = express();
+
+// parse JSON and URL-encoded bodies (needed for PUT/DELETE via forms or Postman)
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // CORS config
 const allowedOrigins = [
@@ -48,7 +51,6 @@ app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
 
-
 // ================= ROUTES =================
 
 // GET all cars
@@ -69,13 +71,14 @@ app.get('/allcars', async (req, res) => {
 // ADD a car
 app.post('/addcar', async (req, res) => {
     const { car_name, car_pic } = req.body;
-    let connection;
+    if (!car_name || !car_pic) return res.status(400).json({ message: 'Missing car_name or car_pic' });
 
+    let connection;
     try {
         connection = await mysql.createConnection(dbConfig);
         await connection.execute(
             'INSERT INTO cars (car_name, car_pic) VALUES (?, ?)',
-            [car_name, car_pic]  // ✅ fixed typo
+            [car_name, car_pic]
         );
         res.status(201).json({ message: `${car_name} has been added successfully` });
     } catch (err) {
@@ -90,8 +93,10 @@ app.post('/addcar', async (req, res) => {
 app.put('/updatecar/:id', async (req, res) => {
     const { id } = req.params;
     const { car_name, car_pic } = req.body;
-    let connection;
 
+    if (!car_name || !car_pic) return res.status(400).json({ message: 'Missing car_name or car_pic' });
+
+    let connection;
     try {
         connection = await mysql.createConnection(dbConfig);
         const [result] = await connection.execute(
@@ -113,8 +118,9 @@ app.put('/updatecar/:id', async (req, res) => {
 // DELETE a car
 app.delete('/deletecar/:id', async (req, res) => {
     const { id } = req.params;
-    let connection;
+    if (!id) return res.status(400).json({ message: 'Missing id' });
 
+    let connection;
     try {
         connection = await mysql.createConnection(dbConfig);
         const [result] = await connection.execute(
