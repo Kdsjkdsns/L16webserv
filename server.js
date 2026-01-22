@@ -95,7 +95,7 @@ app.put('/updatecar/:id', async (req, res) => {
     try {
         connection = await mysql.createConnection(dbConfig);
         await connection.execute(
-            'UPDATE cards SET car_name=?, car_pic=? WHERE id=?',
+            'UPDATE cars SET car_name=?, car_pic=? WHERE id=?',
             [car_name, car_pic, id]
         );
         res.json({ message: `Car ${id} updated successfully` });
