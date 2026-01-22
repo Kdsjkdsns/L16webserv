@@ -1,10 +1,12 @@
-//include the required packages
+// include required packages
 const express = require('express');
 const mysql = require('mysql2/promise');
+const cors = require('cors');
 require('dotenv').config();
+ 
 const port = 3000;
-
-//database config info
+ 
+// database config
 const dbConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -15,71 +17,112 @@ const dbConfig = {
     connectionLimit: 100,
     queueLimit: 0,
 };
-
-//initialize Express app
+ 
+// initialize app
 const app = express();
-//helps app to read JSON
 app.use(express.json());
-
-//start the server
+ 
+// CORS config
+const allowedOrigins = [
+    "http://localhost:3000",
+    "https://onlinecardapp.onrender.com"
+];
+ 
+app.use(
+    cors({
+        origin: function (origin, callback) {
+            if (!origin) return callback(null, true);
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error("Not allowed by CORS"));
+        },
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: false,
+    })
+);
+ 
+// start server
 app.listen(port, () => {
-    console.log('Server running on port', port);
+    console.log(`Server running on port ${port}`);
 });
-
-//Example Route: Get all cards
-app.get('/allcars', async (requestAnimationFrame, res) => {
+ 
+ 
+// ================= ROUTES =================
+ 
+// GET all cards
+app.get('/allcars', async (req, res) => {
+    let connection;
     try {
-        let connection = await mysql.createConnection(dbConfig);
-        const [rows] = await connection.execute(
-            'SELECT * FROM defaultdb.cars'); //no need to specify default schema
+        connection = await mysql.createConnection(dbConfig);
+        const [rows] = await connection.execute('SELECT * FROM cars');
         res.json(rows);
     } catch (err) {
         console.error(err);
-        res.status(500).json({message: 'Server error for allcars'});
+        res.status(500).json({ message: 'Server error for allcars' });
+    } finally {
+        if (connection) await connection.end();
     }
 });
-
-//Example Route: Create a new card
-app.post('/addCar/', async (req, res) => {
-    const {car_name, car_pic} = req.body;
-
+ 
+// ADD a card
+app.post('/addcar', async (req, res) => {
+    const { car_name, car_pic } = req.body;
+    let connection;
+ 
     try {
-        let connection = await mysql.createConnection(dbConfig);
+        connection = await mysql.createConnection(dbConfig);
         await connection.execute(
-            'INSERT INTO cars (car_name, car_pic) VALUES (?, ?)',
-            [car_name, car_pic]);
-        res.status(201).json({message: 'Car ' + car_name + ' added successfully'});
+            'INSERT INTO cards (car_name, car_pic) VALUES (?, ?)',
+            [car_name, car_pic]
+        );
+        res.status(201).json({ message: `Car ${car_name} added successfully` });
     } catch (err) {
         console.error(err);
-        res.status(500).json({message: 'Server error - could not add car ' + car_name});
+        res.status(500).json({ message: 'Server error - could not add car' });
+    } finally {
+        if (connection) await connection.end();
     }
 });
-
-app.post('/updateCar', async (req, res) => {
-    const { id, car_name, car_pic } = req.body;
-
+ 
+// UPDATE a card
+app.put('/updatecar/:id', async (req, res) => {
+    const { id } = req.params;
+    const { car_name, car_pic } = req.body;
+    let connection;
+ 
     try {
-        let connection = await mysql.createConnection(dbConfig);
+        connection = await mysql.createConnection(dbConfig);
         await connection.execute(
-            'UPDATE cars SET car_name = ?, car_pic = ? WHERE id = ?',
+            'UPDATE cards SET car_name=?, car_pic=? WHERE id=?',
             [car_name, car_pic, id]
         );
-        res.json({ message: `Car ID ${id} updated successfully` });
+        res.json({ message: `Car ${id} updated successfully` });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: `Server error - could not update car with id: ${id}` });
+        res.status(500).json({ message: 'Server error - could not update car' });
+    } finally {
+        if (connection) await connection.end();
     }
 });
-
-app.post('/deleteCar', async (req, res) => {
-    const { id } = req.body;
-
+ 
+// DELETE a card
+app.delete('/deletecar/:id', async (req, res) => {
+    const { id } = req.params;
+    let connection;
+ 
     try {
-        let connection = await mysql.createConnection(dbConfig);
-        await connection.execute('DELETE FROM cars WHERE id = ?', [id]);
-        res.json({ message: `Car ID ${id} deleted successfully` });
+        connection = await mysql.createConnection(dbConfig);
+        await connection.execute(
+            'DELETE FROM cars WHERE id=?',
+            [id]
+        );
+        res.json({ message: `Car ${id} deleted successfully` });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: `Server error - could not delete car ${id}` });
+        res.status(500).json({ message: 'Server error - could not delete car' });
+    } finally {
+        if (connection) await connection.end();
     }
 });
