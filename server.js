@@ -3,9 +3,9 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 require('dotenv').config();
-
+ 
 const port = 3000;
-
+ 
 // database config
 const dbConfig = {
     host: process.env.DB_HOST,
@@ -17,20 +17,17 @@ const dbConfig = {
     connectionLimit: 100,
     queueLimit: 0,
 };
-
+ 
 // initialize app
 const app = express();
-
-// ✅ minimal fix: add URL-encoded parsing (needed if frontend sends PUT/DELETE with form data)
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
+ 
 // CORS config
 const allowedOrigins = [
     "http://localhost:3000",
     "https://onlinecardapp.onrender.com"
 ];
-
+ 
 app.use(
     cors({
         origin: function (origin, callback) {
@@ -45,15 +42,16 @@ app.use(
         credentials: false,
     })
 );
-
+ 
 // start server
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
-
+ 
+ 
 // ================= ROUTES =================
-
-// GET all cars
+ 
+// GET all cards
 app.get('/allcars', async (req, res) => {
     let connection;
     try {
@@ -67,19 +65,19 @@ app.get('/allcars', async (req, res) => {
         if (connection) await connection.end();
     }
 });
-
-// ADD a car
+ 
+// ADD a card
 app.post('/addcar', async (req, res) => {
     const { car_name, car_pic } = req.body;
     let connection;
-
+ 
     try {
         connection = await mysql.createConnection(dbConfig);
         await connection.execute(
-            'INSERT INTO cars (car_name, car_pic) VALUES (?, ?)',
-            [car_name, car_pic]  // ✅ fixed typo
+            'INSERT INTO cards (car_name, car_pic) VALUES (?, ?)',
+            [car_name, car_pic]
         );
-        res.status(201).json({ message: `${car_name} has been added successfully` });
+        res.status(201).json({ message: `Car ${car_name} added successfully` });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error - could not add car' });
@@ -87,27 +85,20 @@ app.post('/addcar', async (req, res) => {
         if (connection) await connection.end();
     }
 });
-
-// UPDATE a car
+ 
+// UPDATE a card
 app.put('/updatecar/:id', async (req, res) => {
     const { id } = req.params;
     const { car_name, car_pic } = req.body;
     let connection;
-
+ 
     try {
         connection = await mysql.createConnection(dbConfig);
-
-        // ✅ minimal fix: parse id to integer
-        const carId = parseInt(id);
-
-        const [result] = await connection.execute(
-            'UPDATE cars SET car_name=?, car_pic=? WHERE id=?',
-            [car_name, car_pic, carId]
+        await connection.execute(
+            'UPDATE cards SET car_name=?, car_pic=? WHERE id=?',
+            [car_name, car_pic, id]
         );
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: `Car ${carId} not found` });
-        }
-        res.json({ message: `Car ${carId} updated successfully` });
+        res.json({ message: `Car ${id} updated successfully` });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error - could not update car' });
@@ -115,25 +106,19 @@ app.put('/updatecar/:id', async (req, res) => {
         if (connection) await connection.end();
     }
 });
-
-// DELETE a car
+ 
+// DELETE a card
 app.delete('/deletecar/:id', async (req, res) => {
     const { id } = req.params;
     let connection;
-
+ 
     try {
         connection = await mysql.createConnection(dbConfig);
-
-        const carId = parseInt(id);
-
-        const [result] = await connection.execute(
+        await connection.execute(
             'DELETE FROM cars WHERE id=?',
-            [carId]
+            [id]
         );
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: `Car ${carId} not found` });
-        }
-        res.json({ message: `Car ${carId} deleted successfully` });
+        res.json({ message: `Car ${id} deleted successfully` });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error - could not delete car' });
